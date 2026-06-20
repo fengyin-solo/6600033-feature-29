@@ -35,6 +35,65 @@ function normalRandom(): number {
   return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
 }
 
+function logGamma(x: number): number {
+  const c = [
+    76.18009172947146, -86.50532032941677, 24.01409824083091,
+    -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5
+  ]
+  let y = x, tmp = x + 5.5
+  tmp -= (x + 0.5) * Math.log(tmp)
+  let ser = 1.000000000190015
+  for (let j = 0; j < 6; j++) ser += c[j] / ++y
+  return -tmp + Math.log(2.5066282746310005 * ser / x)
+}
+
+function betaCF(x: number, a: number, b: number): number {
+  const MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300
+  let qab = a + b, qap = a + 1, qam = a - 1
+  let c = 1, d = 1 - (qab * x) / qap
+  if (Math.abs(d) < FPMIN) d = FPMIN
+  d = 1 / d
+  let h = d
+  for (let m = 1; m <= MAXIT; m++) {
+    const m2 = 2 * m
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2))
+    d = 1 + aa * d
+    if (Math.abs(d) < FPMIN) d = FPMIN
+    c = 1 + aa / c
+    if (Math.abs(c) < FPMIN) c = FPMIN
+    d = 1 / d
+    h *= d * c
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2))
+    d = 1 + aa * d
+    if (Math.abs(d) < FPMIN) d = FPMIN
+    c = 1 + aa / c
+    if (Math.abs(c) < FPMIN) c = FPMIN
+    d = 1 / d
+    const del = d * c
+    h *= del
+    if (Math.abs(del - 1) < EPS) break
+  }
+  return h
+}
+
+function betai(a: number, b: number, x: number): number {
+  if (x <= 0) return 0
+  if (x >= 1) return 1
+  const bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x))
+  if (x < (a + 1) / (a + b + 2)) return (bt * betaCF(x, a, b)) / a
+  return 1 - (bt * betaCF(1 - x, b, a)) / b
+}
+
+function tCDF(t: number, df: number): number {
+  const x = df / (df + t * t)
+  const p = 0.5 * betai(df / 2, 0.5, x)
+  return t >= 0 ? 1 - p : p
+}
+
+function tTestPValue(t: number, df: number): number {
+  return 2 * (1 - tCDF(Math.abs(t), Math.max(1, df)))
+}
+
 function runMC(scenario: MCScenario, n: number): MCResult {
   const samples: number[] = []
   const convergence: number[] = []
@@ -126,9 +185,9 @@ export const useMCStore = defineStore('mc', () => {
     const v2 = g2.reduce((s, x) => s + (x - m2) ** 2, 0) / (n2 - 1)
     const se = Math.sqrt(v1 / n1 + v2 / n2)
     const t = (m1 - m2) / se
-    const df = Math.round((v1 / n1 + v2 / n2) ** 2 / ((v1 / n1) ** 2 / (n1 - 1) + (v2 / n2) ** 2 / (n2 - 1)))
-    const pValue = 2 * (1 - Math.min(0.9999, Math.abs(t) / (Math.abs(t) + Math.sqrt(df))))
-    testResult.value = { testType: 'Welch T检验', statistic: Math.round(t * 1000) / 1000, pValue: Math.round(pValue * 10000) / 10000, significant: pValue < 0.05, alpha: 0.05, df }
+    const df = Math.round((v1 / n1 + v2 / n2) ** 2 / ((v1 / n1) ** 2 / (n1 - 1) + (v2 / n2) ** 2 / (n2 - 1))) || 1
+    const pValue = tTestPValue(t, df)
+    testResult.value = { testType: 'Welch T检验', statistic: Math.round(t * 1000) / 1000, pValue: Math.round(pValue * 100000) / 100000, significant: pValue < 0.05, alpha: 0.05, df }
   }
 
   function setScenario(s: MCScenario) { currentScenario.value = s; result.value = null }
