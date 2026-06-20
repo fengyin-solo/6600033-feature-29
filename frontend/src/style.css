@@ -3,7 +3,93 @@
 @tailwind utilities;
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: #0f172a; color: #e2e8f0; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
+
+body {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  background: #0b1220;
+  color: #cbd5e1;
+}
+
+@layer components {
+  .card-surface {
+    @apply bg-slate-800/90 backdrop-blur rounded-xl border border-slate-700/70 shadow-inner-card;
+  }
+
+  .data-block {
+    @apply flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-colors;
+  }
+
+  .data-label {
+    @apply text-xs text-slate-400 font-medium tracking-wide;
+  }
+
+  .data-value {
+    @apply font-mono font-bold tracking-tight;
+  }
+
+  .data-value--primary {
+    @apply text-brand-accent text-data-xl drop-shadow-[0_0_12px_rgba(34,211,238,0.45)];
+  }
+
+  .data-value--true {
+    @apply text-positive-bright text-data-lg drop-shadow-[0_0_10px_rgba(52,211,153,0.35)];
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider;
+  }
+
+  .badge--danger {
+    @apply bg-danger-bg text-danger-bright border border-danger-border animate-pulse-alert;
+  }
+
+  .badge--positive {
+    @apply bg-positive-bg text-positive-bright border border-positive-border shadow-glow-positive;
+  }
+
+  .badge--warning {
+    @apply bg-warning-bg text-warning-bright border border-warning-border;
+  }
+
+  .stat-card {
+    @apply bg-slate-900/80 rounded-xl p-3 text-center border transition-all duration-300;
+  }
+
+  .stat-card--neutral {
+    @apply border-slate-700/60;
+  }
+
+  .stat-card--primary {
+    @apply border-brand-accent/40 bg-slate-900/90 shadow-glow-cyan;
+  }
+
+  .stat-card--danger {
+    @apply border-danger-border bg-danger-bg/40 shadow-glow-danger;
+  }
+
+  .stat-card--positive {
+    @apply border-positive-border bg-positive-bg/60 shadow-glow-positive;
+  }
+
+  .stat-card__label {
+    @apply text-xs text-slate-400 mb-1.5 font-medium tracking-wide;
+  }
+
+  .stat-card__value {
+    @apply font-mono font-bold;
+  }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #1e293b; }
-::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #475569, #334155);
+  border-radius: 5px;
+  border: 2px solid #1e293b;
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #64748b, #475569); }
+
+::selection {
+  background: rgba(34, 211, 238, 0.3);
+  color: #e0f2fe;
+}
